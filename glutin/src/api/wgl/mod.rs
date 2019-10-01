@@ -236,8 +236,14 @@ impl Context {
         // } else {
         // Err(ContextError::IoError(std::io::Error::last_os_error()))
         // }
-        unsafe { SwapBuffers(self.hdc) };
-        Ok(())
+        unsafe { 
+            let result = SwapBuffers(self.hdc);
+            if result != 0 {
+                Ok(())
+            } else {
+                Err(ContextError::IoError(std::io::Error::last_os_error()))
+            }
+        }
     }
 
     #[inline]

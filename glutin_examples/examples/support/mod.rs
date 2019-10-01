@@ -3,7 +3,7 @@ use glutin::{self, PossiblyCurrent};
 use std::ffi::CStr;
 
 pub mod gl {
-    pub use self::Gles2 as Gl;
+    // pub use self::Gl as Gl;
     include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
 }
 
@@ -85,6 +85,17 @@ pub fn load(gl_context: &glutin::Context<PossiblyCurrent>) -> Gl {
             gl::STATIC_DRAW,
         );
 
+        let mut ib = std::mem::uninitialized();
+        gl.GenBuffers(1, &mut ib);
+        gl.BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ib);
+        gl.BufferData(
+            gl::ELEMENT_ARRAY_BUFFER,
+            (INDEX_DATA.len() * std::mem::size_of::<u32>())
+                as gl::types::GLsizeiptr,
+            INDEX_DATA.as_ptr() as *const _,
+            gl::STATIC_DRAW,
+        );
+
         if gl.BindVertexArray.is_loaded() {
             let mut vao = std::mem::uninitialized();
             gl.GenVertexArrays(1, &mut vao);
@@ -123,7 +134,8 @@ impl Gl {
         unsafe {
             self.gl.ClearColor(color[0], color[1], color[2], color[3]);
             self.gl.Clear(gl::COLOR_BUFFER_BIT);
-            self.gl.DrawArrays(gl::TRIANGLES, 0, 3);
+            // self.gl.DrawArrays(gl::TRIANGLES, 0, 3);
+            self.gl.DrawElements(gl::TRIANGLES, 3, gl::UNSIGNED_INT, std::ptr::null());
         }
     }
 }
@@ -133,6 +145,10 @@ static VERTEX_DATA: [f32; 15] = [
     -0.5, -0.5,  1.0,  0.0,  0.0,
      0.0,  0.5,  0.0,  1.0,  0.0,
      0.5, -0.5,  0.0,  0.0,  1.0,
+];
+
+static INDEX_DATA: [u32; 3] = [
+    0, 1, 2,
 ];
 
 const VS_SRC: &'static [u8] = b"
